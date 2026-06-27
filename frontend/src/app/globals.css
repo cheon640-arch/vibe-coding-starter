@@ -7,3 +7,48 @@
 body {
   margin: 0;
 }
+
+@keyframes cloud-drift {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(28px);
+  }
+}
+
+@keyframes fish-swim {
+  0%,
+  100% {
+    transform: translateX(0) rotate(-4deg);
+  }
+  50% {
+    transform: translateX(42px) rotate(2deg);
+  }
+}
+
+.cloud-drift {
+  animation: cloud-drift 7s ease-in-out infinite;
+}
+
+.cloud-drift-reverse {
+  animation: cloud-drift 9s ease-in-out infinite reverse;
+}
+
+.fish-swim {
+  animation: fish-swim 5s ease-in-out infinite;
+}
+
+.fish-swim-slow {
+  animation: fish-swim 7s ease-in-out infinite reverse;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cloud-drift,
+  .cloud-drift-reverse,
+  .fish-swim,
+  .fish-swim-slow {
+    animation: none;
+  }
+}

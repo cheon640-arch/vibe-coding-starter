@@ -21,21 +21,20 @@ const dbPath = path.join(process.cwd(), "local.db");
 
 const defaultProfile: Profile = {
   id: 1,
-  name: "오타니 쇼헤이",
-  team: "LA 다저스",
-  position: "투수 / 지명타자",
-  uniform_number: "17번",
-  tagline:
-    "투수와 타자를 모두 소화하는 세계적인 야구 선수입니다. 강한 타격, 빠른 주루, 압도적인 경기 영향력으로 많은 팬들에게 사랑받고 있습니다.",
+  name: "천지원",
+  team: "산업공학과",
+  position: "대학생",
+  uniform_number: "데이터마이닝",
+  tagline: "데이터를 분석하고, 그 안에 숨은 패턴과 의미를 발견하는 데 관심이 있습니다.",
   introduction:
-    "안녕하세요. 저는 오타니 쇼헤이입니다. 현재 LA 다저스에서 뛰고 있으며, 매 경기 팀에 도움이 되는 선수가 되기 위해 최선을 다하고 있습니다.",
+    "안녕하세요. 산업공학을 전공하고 있는 천지원입니다. 긍정적인 태도로 수업과 활동에 적극적으로 참여하며, 데이터마이닝 수업에서 프로젝트를 수행한 경험이 있습니다. 데이터를 분석해 의미 있는 패턴을 찾고, 그 결과를 문제 해결에 연결하는 과정에 관심이 많습니다.",
   image_path: "/images/ohtani.jpeg",
 };
 
 const defaultHighlights: Highlight[] = [
-  { id: 1, label: "강한 홈런 파워" },
-  { id: 2, label: "빠른 주루" },
-  { id: 3, label: "이도류 플레이" },
+  { id: 1, label: "긍정적인 태도" },
+  { id: 2, label: "적극적인 참여" },
+  { id: 3, label: "데이터마이닝 프로젝트 경험" },
 ];
 
 function getDb() {
