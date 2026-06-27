@@ -13,7 +13,7 @@ export default function Home() {
   const highlights = getHighlights();
 
   return (
-    <main className="min-h-screen overflow-hidden bg-white font-sans text-black">
+    <main className="min-h-screen overflow-hidden bg-white font-sans font-bold text-black">
       <section className="relative overflow-hidden bg-[#dff8ff] px-6 pb-32 pt-6">
         <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between rounded-[100px] border border-black bg-white px-5 py-3 shadow-[2px_2px_0_#0a0a0d]">
           <span className="text-xl font-bold tracking-tight">● My Profile</span>
@@ -22,7 +22,7 @@ export default function Home() {
           </span>
         </nav>
 
-        <div className="relative z-10 mx-auto mt-12 grid max-w-6xl items-center gap-8 pb-8 md:grid-cols-[320px_1fr] md:text-left">
+        <div className="relative z-10 mx-auto mt-12 grid max-w-6xl items-center gap-8 pb-8 md:grid-cols-[320px_1fr]">
           <Image
             src="/images/profile-character.png"
             alt="천지원 캐릭터 프로필"
@@ -32,8 +32,8 @@ export default function Home() {
             sizes="(max-width: 768px) 260px, 320px"
             className="mx-auto h-auto w-full max-w-[260px] drop-shadow-[4px_4px_0_rgba(0,0,0,0.18)] md:max-w-[320px]"
           />
-          <div className="text-center md:text-left">
-            <span className="inline-flex rounded-[100px] border border-black bg-white px-4 py-2 text-base font-medium">
+          <div className="text-center">
+            <span className="inline-flex rounded-[100px] border border-black bg-white px-4 py-2 text-base font-bold">
               ✦ Industrial Engineering Student
             </span>
             <h1 className="mt-6 text-5xl font-bold leading-[1.08] tracking-[-0.04em] sm:text-6xl lg:text-7xl">
@@ -41,7 +41,7 @@ export default function Home() {
               <br />
               {profile.name}입니다.
             </h1>
-            <p className="mx-auto mt-6 max-w-3xl break-keep text-xl font-medium leading-8 md:mx-0">{profile.tagline}</p>
+            <p className="mx-auto mt-6 max-w-3xl break-keep text-xl font-bold leading-8">{profile.tagline}</p>
           </div>
         </div>
 
@@ -74,7 +74,7 @@ export default function Home() {
       <section className="bg-[#b7eaf6] px-6 py-20">
         <div className="mx-auto max-w-6xl">
         <div className="text-center">
-          <span className="inline-flex rounded-[100px] border border-black bg-white px-4 py-2 text-base font-medium">
+          <span className="inline-flex rounded-[100px] border border-black bg-white px-4 py-2 text-base font-bold">
             기본 정보
           </span>
           <h2 className="mt-4 text-4xl font-bold tracking-[-0.03em]">한눈에 보는 프로필</h2>
@@ -86,23 +86,20 @@ export default function Home() {
               key={card.key}
               className={`${card.color} rounded-xl border border-black p-6 shadow-[2px_2px_0_#0a0a0d]`}
             >
-              <p className="text-base font-medium">{card.label}</p>
+              <p className="text-base font-bold">{card.label}</p>
               <p className="mt-3 text-2xl font-bold">{profile[card.key]}</p>
             </article>
           ))}
         </div>
 
         <article className="relative mt-10 overflow-hidden rounded-2xl border border-black bg-[#b7eaf6] p-7 shadow-[4px_4px_0_#171717] sm:p-9">
-          <div className="relative z-10 grid gap-6 sm:grid-cols-[auto_1fr] sm:items-center">
-            <span className="flex h-16 w-16 items-center justify-center rounded-full border border-black bg-[#3366e0] text-3xl text-white shadow-[2px_2px_0_#0a0a0d]">
-              ↗
-            </span>
+          <div className="relative z-10">
             <div>
               <p className="text-base font-bold">UPCOMING PROJECT</p>
               <h3 className="mt-2 text-3xl font-bold tracking-[-0.03em] sm:text-4xl">
                 고모텍 자동화 마케팅 프로젝트 참여 예정
               </h3>
-              <p className="mt-3 max-w-2xl text-lg font-medium leading-7">
+              <p className="mt-3 max-w-3xl break-keep text-lg font-bold leading-7">
                 데이터 분석 경험과 적극적인 태도를 바탕으로 프로젝트에 열심히 참여할 예정입니다.
               </p>
             </div>
@@ -130,20 +127,20 @@ export default function Home() {
 
         <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[0.8fr_1.2fr] md:items-center">
           <div>
-            <span className="inline-flex rounded-[100px] border border-black bg-white px-4 py-2 text-base font-medium">
+            <span className="inline-flex rounded-[100px] border border-black bg-white px-4 py-2 text-base font-bold">
               나를 소개합니다
             </span>
             <h2 className="mt-5 text-4xl font-bold tracking-[-0.03em] sm:text-5xl">자기소개</h2>
           </div>
           <div className="-rotate-1 rounded-2xl border border-black bg-white p-7 shadow-[4px_4px_0_#171717]">
-            <p className="text-xl font-medium leading-8">{profile.introduction}</p>
+            <p className="text-xl font-bold leading-8">{profile.introduction}</p>
           </div>
         </div>
       </section>
 
       <section className="relative overflow-hidden bg-[#3366e0] px-6 py-24">
         <div className="mx-auto max-w-6xl text-center">
-          <span className="inline-flex rounded-[100px] border border-black bg-white px-4 py-2 text-base font-medium">
+          <span className="inline-flex rounded-[100px] border border-black bg-white px-4 py-2 text-base font-bold">
             ✦ Highlights
           </span>
           <h2 className="mt-5 text-4xl font-bold tracking-[-0.03em] text-white sm:text-5xl">나를 보여주는 특징</h2>
@@ -196,7 +193,7 @@ export default function Home() {
         <span className="absolute bottom-10 right-[9%] rotate-6 text-4xl text-[#3366e0]">✦</span>
       </section>
 
-      <footer className="border-t border-black bg-[#f5f5f5] px-6 py-6 text-center text-base font-medium">
+      <footer className="border-t border-black bg-[#f5f5f5] px-6 py-6 text-center text-base font-bold">
         Industrial Engineering · Data Mining · Marketing Automation
       </footer>
     </main>
