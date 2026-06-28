@@ -1,201 +1,353 @@
+"use client";
+
 import Image from "next/image";
-import { getHighlights, getProfile } from "@/lib/db";
+import { ChangeEvent, useEffect, useRef, useState } from "react";
 
-const infoCards = [
-  { label: "이름", key: "name", color: "bg-[#fef3c8]" },
-  { label: "소속", key: "team", color: "bg-[#d2fae5]" },
-  { label: "역할", key: "position", color: "bg-[#fae9ff]" },
-  { label: "관심 분야", key: "uniform_number", color: "bg-[#f5d1fe]" },
-] as const;
+type Kind = "top" | "bottom";
+type Clothing = { id: string; name: string; type: Kind; color: string; accent: string; image?: string };
+type Outfit = { name: string; mood: string; top: string; bottom: string; reason: string };
 
-export default function Home() {
-  const profile = getProfile();
-  const highlights = getHighlights();
+const starterClothes: Clothing[] = [
+  { id: "sweatshirt", name: "크림 맨투맨", type: "top", color: "#e8e2d5", accent: "#aaa18f", image: "/images/clothes/cream-sweatshirt-final.png" },
+  { id: "trench", name: "베이지 트렌치코트", type: "top", color: "#aa9a77", accent: "#77694e", image: "/images/clothes/beige-trench-coat-cutout.png" },
+  { id: "puffer", name: "블랙 패딩", type: "top", color: "#202020", accent: "#050505", image: "/images/clothes/black-puffer-cutout.png" },
+  { id: "shirt", name: "라이트 블루 셔츠", type: "top", color: "#ced8e8", accent: "#8799b2", image: "/images/clothes/blue-shirt-cutout.png" },
+  { id: "vest", name: "그린 니트 조끼", type: "top", color: "#294a32", accent: "#142a1b", image: "/images/clothes/green-knit-vest-cutout.png" },
+  { id: "wide-pants", name: "네이비 와이드 팬츠", type: "bottom", color: "#151b2c", accent: "#090c15", image: "/images/clothes/navy-wide-pants-cutout.png" },
+  { id: "floral-skirt", name: "플라워 롱스커트", type: "bottom", color: "#e7dec9", accent: "#9f8269", image: "/images/clothes/floral-skirt-cutout.png" },
+  { id: "navy-slacks", name: "네이비 슬랙스", type: "bottom", color: "#171b29", accent: "#090b12", image: "/images/clothes/navy-slacks-cutout.png" },
+  { id: "blue-jeans", name: "워싱 와이드 데님", type: "bottom", color: "#758ba2", accent: "#40566d", image: "/images/clothes/blue-jeans-cutout.png" },
+];
+
+const outfits: Outfit[] = [
+  { name: "포근한 데일리 룩", mood: "COZY TODAY", top: "sweatshirt", bottom: "blue-jeans", reason: "크림 맨투맨과 워싱 데님으로 편안하게 입어봐." },
+  { name: "단정한 출근 룩", mood: "SOFT OFFICE", top: "shirt", bottom: "navy-slacks", reason: "라이트 블루 셔츠와 슬랙스로 깔끔하게 맞췄어." },
+  { name: "빈티지 피크닉 룩", mood: "PICNIC DAY", top: "vest", bottom: "floral-skirt", reason: "니트 조끼와 플라워 스커트가 부드럽게 어울려." },
+  { name: "쌀쌀한 날 외출 룩", mood: "COLD WEATHER", top: "puffer", bottom: "wide-pants", reason: "두꺼운 패딩과 긴 팬츠로 찬 바람을 막아줘." },
+  { name: "비 오는 날 클래식 룩", mood: "RAINY CLASSIC", top: "trench", bottom: "navy-slacks", reason: "트렌치코트와 슬랙스로 차분하게 마무리했어." },
+];
+
+function Garment({ item }: { item: Clothing }) {
+  if (item.image) {
+    return <Image src={item.image} alt={item.name} width={160} height={160} unoptimized className="h-full w-full object-cover" />;
+  }
+  return (
+    <div
+      className={`garment ${item.type === "top" ? "garment-top" : "garment-bottom"}`}
+      style={{ "--cloth": item.color, "--accent": item.accent } as React.CSSProperties}
+    >
+      <span />
+    </div>
+  );
+}
+
+function Avatar({
+  top,
+  bottom,
+  onDress,
+  aiImage,
+}: {
+  top: Clothing;
+  bottom: Clothing;
+  onDress: (id: string) => void;
+  aiImage: string | null;
+}) {
+  const [topPose, setTopPose] = useState({ x: 72, y: 142, width: 156 });
+  const [bottomPose, setBottomPose] = useState({ x: 92, y: 250, width: 116 });
+  const drag = useRef<{ kind: Kind; x: number; y: number; startX: number; startY: number } | null>(null);
+
+  useEffect(() => {
+    setTopPose({ x: top.id === "trench" ? 62 : 72, y: 142, width: top.id === "trench" ? 176 : 156 });
+  }, [top.id]);
+
+  useEffect(() => {
+    setBottomPose({ x: bottom.id === "floral-skirt" ? 78 : 92, y: 250, width: bottom.id === "floral-skirt" ? 145 : 116 });
+  }, [bottom.id]);
+
+  const moveLayer = (event: React.PointerEvent<HTMLImageElement>, kind: Kind) => {
+    const active = drag.current;
+    if (!active || active.kind !== kind) return;
+    const next = { x: active.x + event.clientX - active.startX, y: active.y + event.clientY - active.startY };
+    if (kind === "top") setTopPose((pose) => ({ ...pose, ...next }));
+    else setBottomPose((pose) => ({ ...pose, ...next }));
+  };
+
+  const startMove = (event: React.PointerEvent<HTMLImageElement>, kind: Kind) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    const pose = kind === "top" ? topPose : bottomPose;
+    drag.current = { kind, x: pose.x, y: pose.y, startX: event.clientX, startY: event.clientY };
+  };
+
+  const resize = (kind: Kind, amount: number) => {
+    if (kind === "top") setTopPose((pose) => ({ ...pose, width: Math.max(60, pose.width + amount) }));
+    else setBottomPose((pose) => ({ ...pose, width: Math.max(60, pose.width + amount) }));
+  };
 
   return (
-    <main className="min-h-screen overflow-hidden bg-white font-sans font-bold text-black">
-      <section className="relative overflow-hidden bg-[#dff8ff] px-6 pb-32 pt-6">
-        <nav className="relative z-10 mx-auto flex max-w-6xl items-center justify-between rounded-[100px] border border-black bg-white px-5 py-3 shadow-[2px_2px_0_#0a0a0d]">
-          <span className="text-xl font-bold tracking-tight">● My Profile</span>
-          <span className="rounded-[100px] border border-black bg-[#a3e635] px-4 py-2 text-base font-bold shadow-[2px_2px_0_#0a0a0d]">
-            About Me
-          </span>
-        </nav>
+    <div
+      className="avatar-stage relative mx-auto h-[500px] w-[260px] sm:h-[580px] sm:w-[300px]"
+      onDragOver={(event) => event.preventDefault()}
+      onDrop={(event) => {
+        event.preventDefault();
+        onDress(event.dataTransfer.getData("text/clothing-id"));
+      }}
+    >
+      <Image
+        src={aiImage ?? "/images/fitme-avatar-y2k.png"}
+        alt={aiImage ? "AI가 옷을 맞춰 입힌 캐릭터" : "나의 코디 캐릭터"}
+        fill
+        priority
+        unoptimized={Boolean(aiImage)}
+        sizes="300px"
+        className="object-contain"
+      />
+      {!aiImage && top.image && (
+        <Image
+          src={top.image}
+          alt={top.name}
+          width={400}
+          height={400}
+          unoptimized
+          draggable={false}
+          className="free-clothing free-clothing-top"
+          style={{ left: topPose.x, top: topPose.y, width: topPose.width }}
+          onPointerDown={(event) => startMove(event, "top")}
+          onPointerMove={(event) => moveLayer(event, "top")}
+          onPointerUp={() => (drag.current = null)}
+        />
+      )}
+      {!aiImage && bottom.image && (
+        <Image
+          src={bottom.image}
+          alt={bottom.name}
+          width={400}
+          height={400}
+          unoptimized
+          draggable={false}
+          className="free-clothing free-clothing-bottom"
+          style={{ left: bottomPose.x, top: bottomPose.y, width: bottomPose.width }}
+          onPointerDown={(event) => startMove(event, "bottom")}
+          onPointerMove={(event) => moveLayer(event, "bottom")}
+          onPointerUp={() => (drag.current = null)}
+        />
+      )}
+      {!aiImage && <div className="fit-controls">
+        <span>상의</span><button onClick={() => resize("top", -10)}>−</button><button onClick={() => resize("top", 10)}>＋</button>
+        <span>하의</span><button onClick={() => resize("bottom", -10)}>−</button><button onClick={() => resize("bottom", 10)}>＋</button>
+      </div>}
+      <div className="drop-hint">옷을 여기로 끌어다 놔</div>
+    </div>
+  );
+}
 
-        <div className="relative z-10 mx-auto mt-12 grid max-w-6xl items-center gap-8 pb-8 md:grid-cols-[320px_1fr]">
-          <Image
-            src="/images/profile-character.png"
-            alt="천지원 캐릭터 프로필"
-            width={1254}
-            height={1254}
-            priority
-            sizes="(max-width: 768px) 260px, 320px"
-            className="mx-auto h-auto w-full max-w-[260px] drop-shadow-[4px_4px_0_rgba(0,0,0,0.18)] md:max-w-[320px]"
-          />
-          <div className="text-center">
-            <span className="inline-flex rounded-[100px] border border-black bg-white px-4 py-2 text-base font-bold">
-              ✦ Industrial Engineering Student
-            </span>
-            <h1 className="mt-6 text-5xl font-bold leading-[1.08] tracking-[-0.04em] sm:text-6xl lg:text-7xl">
-              안녕하세요,
-              <br />
-              {profile.name}입니다.
-            </h1>
-            <p className="mx-auto mt-6 max-w-3xl break-keep text-xl font-bold leading-8">{profile.tagline}</p>
-          </div>
+export default function Home() {
+  const [started, setStarted] = useState(false);
+  const [clothes, setClothes] = useState(starterClothes);
+  const [index, setIndex] = useState(0);
+  const [topId, setTopId] = useState(outfits[0].top);
+  const [bottomId, setBottomId] = useState(outfits[0].bottom);
+  const [tab, setTab] = useState<Kind>("top");
+  const [weather, setWeather] = useState({ place: "서울", temp: 22, label: "맑음", icon: "☀️" });
+  const [aiImage, setAiImage] = useState<string | null>(null);
+  const [isFitting, setIsFitting] = useState(false);
+  const [fitError, setFitError] = useState("");
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!started || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+      try {
+        const result = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${coords.latitude}&longitude=${coords.longitude}&current=temperature_2m,weather_code&timezone=auto`);
+        const data = await result.json();
+        const code = Number(data.current.weather_code);
+        const rainy = code >= 51;
+        const cloudy = code >= 2 && code <= 48;
+        setWeather({
+          place: "현재 위치",
+          temp: Math.round(data.current.temperature_2m),
+          label: rainy ? "비" : cloudy ? "구름 많음" : "맑음",
+          icon: rainy ? "🌧️" : cloudy ? "⛅" : "☀️",
+        });
+      } catch {
+        // 위치 접근이 안 되면 서울의 시연용 기본값을 유지한다.
+      }
+    });
+  }, [started]);
+
+  const top = clothes.find((item) => item.id === topId) ?? clothes[0];
+  const bottom = clothes.find((item) => item.id === bottomId) ?? clothes.find((item) => item.type === "bottom")!;
+
+  const showOutfit = (nextIndex: number) => {
+    const next = (nextIndex + outfits.length) % outfits.length;
+    setIndex(next);
+    setTopId(outfits[next].top);
+    setBottomId(outfits[next].bottom);
+    setAiImage(null);
+  };
+
+  const dress = (id: string) => {
+    const item = clothes.find((cloth) => cloth.id === id);
+    if (!item) return;
+    item.type === "top" ? setTopId(id) : setBottomId(id);
+    setAiImage(null);
+  };
+
+  const generateAiFit = async () => {
+    if (!top.image || !bottom.image) return;
+    setIsFitting(true);
+    setFitError("");
+
+    try {
+      const [topFile, bottomFile] = await Promise.all([
+        fetch(top.image).then((response) => response.blob()),
+        fetch(bottom.image).then((response) => response.blob()),
+      ]);
+      const form = new FormData();
+      form.append("top", topFile, "top.png");
+      form.append("bottom", bottomFile, "bottom.png");
+
+      const response = await fetch("/api/try-on", { method: "POST", body: form });
+      const responseText = await response.text();
+      let result: { image?: string; error?: string };
+      try {
+        result = JSON.parse(responseText);
+      } catch {
+        throw new Error(
+          response.ok
+            ? "AI 서버 응답을 읽지 못했어."
+            : `AI 서버 오류 (${response.status}): ${responseText.slice(0, 120)}`,
+        );
+      }
+      if (!response.ok) throw new Error(result.error ?? "AI 피팅 생성에 실패했어.");
+      if (!result.image) throw new Error("생성된 이미지가 비어 있어.");
+      setAiImage(result.image);
+    } catch (error) {
+      setFitError(error instanceof Error ? error.message : "AI 피팅 생성에 실패했어.");
+    } finally {
+      setIsFitting(false);
+    }
+  };
+
+  const upload = (event: ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    const id = `upload-${Date.now()}`;
+    const item: Clothing = {
+      id,
+      name: file.name.replace(/\.[^.]+$/, ""),
+      type: tab,
+      color: tab === "top" ? "#d7b7f0" : "#b4cce5",
+      accent: "#8f6aad",
+      image: URL.createObjectURL(file),
+    };
+    setClothes((current) => [...current, item]);
+    tab === "top" ? setTopId(id) : setBottomId(id);
+    setAiImage(null);
+    event.target.value = "";
+  };
+
+  if (!started) {
+    return (
+      <main className="landing">
+        <div className="landing-blob blob-one" />
+        <div className="landing-blob blob-two" />
+        <p className="brand">옷똑</p>
+        <section className="relative z-10 flex flex-col items-center text-center">
+          <span className="mb-6 rounded-full bg-white/70 px-5 py-2 text-sm font-bold text-[#8f5b4d]">날씨와 내 옷장으로 완성하는 오늘의 코디</span>
+          <h1 className="break-keep text-[clamp(3.5rem,10vw,7.5rem)] font-black leading-[.98] tracking-[-.08em]">오늘,<br />뭐 입지?</h1>
+          <p className="mt-7 text-lg font-semibold leading-8 text-[#775f59]">고민은 우리가 할게.<br />넌 마음에 드는 옷만 골라!</p>
+          <button className="start-button" onClick={() => setStarted(true)}>내 코디 추천받기 <span>→</span></button>
+          <p className="mt-4 text-xs font-semibold text-[#a58880]">약 1분이면 충분해</p>
+        </section>
+        <div className="landing-card card-left">🧥</div>
+        <div className="landing-card card-right">👖</div>
+      </main>
+    );
+  }
+
+  return (
+    <main className="min-h-screen bg-[#fffaf4] text-[#3d2925]">
+      <header className="sticky top-0 z-30 border-b border-[#eaded4] bg-[#fffaf4]/95 px-5 py-4 backdrop-blur">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <button className="text-2xl font-black tracking-[-.08em]" onClick={() => setStarted(false)}>옷똑</button>
+          <div className="weather-pill"><span className="text-xl">{weather.icon}</span><span><b>{weather.temp}°</b> {weather.place} · {weather.label}</span></div>
+          <button className="camera-button" onClick={() => fileRef.current?.click()} aria-label="옷 사진 추가"><span>＋</span> 📷</button>
+        </div>
+      </header>
+
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+          <div><p className="text-sm font-bold text-[#ef7f6d]">TODAY&apos;S PICK</p><h1 className="mt-1 text-3xl font-black tracking-[-.05em] sm:text-4xl">오늘은 이렇게 입어봐!</h1></div>
+          <p className="rounded-full bg-[#fff0db] px-4 py-2 text-sm font-bold text-[#8e6751]">{weather.temp}° · 얇은 면, 가벼운 겉옷 추천</p>
         </div>
 
-        <svg className="cloud-drift absolute left-[7%] top-32 w-32" viewBox="0 0 140 60" aria-hidden="true">
-          <path
-            d="M28 50h82c15 0 24-8 24-19s-10-19-23-19c-5 0-9 1-13 4C92 7 82 2 70 2 54 2 42 11 39 24c-3-2-7-3-11-3C15 21 6 28 6 36s9 14 22 14Z"
-            fill="#ffffff"
-            stroke="#000000"
-            strokeWidth="2"
-          />
-        </svg>
-        <svg className="cloud-drift-reverse absolute right-[8%] top-44 w-24" viewBox="0 0 140 60" aria-hidden="true">
-          <path
-            d="M28 50h82c15 0 24-8 24-19s-10-19-23-19c-5 0-9 1-13 4C92 7 82 2 70 2 54 2 42 11 39 24c-3-2-7-3-11-3C15 21 6 28 6 36s9 14 22 14Z"
-            fill="#ffffff"
-            stroke="#000000"
-            strokeWidth="2"
-          />
-        </svg>
-        <svg
-          className="absolute bottom-0 left-0 h-16 w-full"
-          viewBox="0 0 1440 80"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path d="M0 38C240 82 480 0 720 38s480 44 720 0v42H0Z" fill="#b7eaf6" />
-        </svg>
-      </section>
-
-      <section className="bg-[#b7eaf6] px-6 py-20">
-        <div className="mx-auto max-w-6xl">
-        <div className="text-center">
-          <span className="inline-flex rounded-[100px] border border-black bg-white px-4 py-2 text-base font-bold">
-            기본 정보
-          </span>
-          <h2 className="mt-4 text-4xl font-bold tracking-[-0.03em]">한눈에 보는 프로필</h2>
-        </div>
-
-        <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-          {infoCards.map((card) => (
-            <article
-              key={card.key}
-              className={`${card.color} rounded-xl border border-black p-6 shadow-[2px_2px_0_#0a0a0d]`}
-            >
-              <p className="text-base font-bold">{card.label}</p>
-              <p className="mt-3 text-2xl font-bold">{profile[card.key]}</p>
-            </article>
-          ))}
-        </div>
-
-        <article className="relative mt-10 overflow-hidden rounded-2xl border border-black bg-[#b7eaf6] p-7 shadow-[4px_4px_0_#171717] sm:p-9">
-          <div className="relative z-10">
-            <div>
-              <p className="text-base font-bold">UPCOMING PROJECT</p>
-              <h3 className="mt-2 text-3xl font-bold tracking-[-0.03em] sm:text-4xl">
-                고모텍 자동화 마케팅 프로젝트 참여 예정
-              </h3>
-              <p className="mt-3 max-w-3xl break-keep text-lg font-bold leading-7">
-                데이터 분석 경험과 적극적인 태도를 바탕으로 프로젝트에 열심히 참여할 예정입니다.
-              </p>
+        <section className="styling-grid">
+          <aside className="closet-panel">
+            <div className="wardrobe-crown"><span>MY CLOSET</span></div>
+            <div className="mb-4 flex items-center justify-between">
+              <div><p className="eyebrow">DRAG &amp; DRESS</p><h2 className="text-xl font-black">옷장에서 꺼내 입혀봐</h2></div>
+              <button className="mini-add" onClick={() => fileRef.current?.click()}>사진 추가</button>
             </div>
-          </div>
-          <span className="absolute -bottom-8 -right-4 rotate-12 text-8xl font-bold text-black/10">PROJECT</span>
-        </article>
-        </div>
-      </section>
+            <div className="mb-4 flex rounded-xl bg-[#f4ebe4] p-1 text-sm font-bold">
+              {(["top", "bottom"] as Kind[]).map((kind) => <button key={kind} className={`flex-1 rounded-lg py-2 ${tab === kind ? "bg-white shadow-sm" : ""}`} onClick={() => setTab(kind)}>{kind === "top" ? "상의" : "하의"}</button>)}
+            </div>
+            <div className="closet-interior">
+              <div className="hanger-rail" />
+              <div className="closet-items">
+              {clothes.filter((item) => item.type === tab).map((item) => {
+                const selected = item.id === (item.type === "top" ? topId : bottomId);
+                return (
+                  <button
+                    key={item.id}
+                    draggable
+                    className={`closet-item ${selected ? "selected" : ""}`}
+                    onDragStart={(event) => {
+                      event.dataTransfer.setData("text/clothing-id", item.id);
+                      event.dataTransfer.effectAllowed = "copy";
+                    }}
+                    onClick={() => dress(item.id)}
+                  >
+                    <span className="hanger">⌒</span>
+                    <div className="h-36 overflow-hidden p-2"><Garment item={item} /></div>
+                    <span>{item.name}</span>
+                  </button>
+                );
+              })}
+              </div>
+              <div className="wardrobe-drawers"><span /><span /><span /></div>
+            </div>
+            <button className="upload-empty" onClick={() => fileRef.current?.click()}>📷　내 옷 사진 추가하기</button>
+          </aside>
 
-      <section className="relative overflow-hidden bg-[#67c7d9] px-6 py-24">
-        <svg
-          className="absolute left-0 top-0 h-12 w-full -translate-y-[1px]"
-          viewBox="0 0 1440 48"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path d="M0 0h1440v10c-240 38-480-10-720 12S240 48 0 12Z" fill="#b7eaf6" />
-        </svg>
+          <section className="avatar-panel">
+            <div className="recommend-badge">AI 추천 {index + 1} / {outfits.length}</div>
+            <button className="arrow left-4" onClick={() => showOutfit(index - 1)} aria-label="이전 코디">‹</button>
+            <Avatar top={top} bottom={bottom} onDress={dress} aiImage={aiImage} />
+            <button className="arrow right-4" onClick={() => showOutfit(index + 1)} aria-label="다음 코디">›</button>
+            <div className="text-center">
+              <p className="text-xs font-black tracking-[.18em] text-[#ef7f6d]">{outfits[index].mood}</p>
+              <h2 className="mt-1 text-2xl font-black">{outfits[index].name}</h2>
+              <p className="mx-auto mt-2 max-w-sm break-keep text-sm font-semibold leading-6 text-[#876e68]">{outfits[index].reason}</p>
+            </div>
+            <div className="mt-5 flex gap-2">{outfits.map((outfit, i) => <button key={outfit.name} aria-label={`${i + 1}번 코디`} onClick={() => showOutfit(i)} className={`h-2.5 rounded-full transition-all ${index === i ? "w-8 bg-[#ef7f6d]" : "w-2.5 bg-[#decfc4]"}`} />)}</div>
+          </section>
 
-        <svg className="fish-swim-slow absolute bottom-8 right-[5%] w-20" viewBox="0 0 120 60" aria-hidden="true">
-          <path d="M25 30C42 8 76 8 94 30 76 52 42 52 25 30Z" fill="#fef3c8" stroke="#000" strokeWidth="2" />
-          <path d="m25 30-18-15v30Z" fill="#fef3c8" stroke="#000" strokeWidth="2" />
-          <circle cx="79" cy="25" r="2.5" fill="#000" />
-        </svg>
-
-        <div className="mx-auto grid max-w-6xl gap-10 md:grid-cols-[0.8fr_1.2fr] md:items-center">
-          <div>
-            <span className="inline-flex rounded-[100px] border border-black bg-white px-4 py-2 text-base font-bold">
-              나를 소개합니다
-            </span>
-            <h2 className="mt-5 text-4xl font-bold tracking-[-0.03em] sm:text-5xl">자기소개</h2>
-          </div>
-          <div className="-rotate-1 rounded-2xl border border-black bg-white p-7 shadow-[4px_4px_0_#171717]">
-            <p className="text-xl font-bold leading-8">{profile.introduction}</p>
-          </div>
-        </div>
-      </section>
-
-      <section className="relative overflow-hidden bg-[#3366e0] px-6 py-24">
-        <div className="mx-auto max-w-6xl text-center">
-          <span className="inline-flex rounded-[100px] border border-black bg-white px-4 py-2 text-base font-bold">
-            ✦ Highlights
-          </span>
-          <h2 className="mt-5 text-4xl font-bold tracking-[-0.03em] text-white sm:text-5xl">나를 보여주는 특징</h2>
-          <div className="mt-12 grid gap-5 sm:grid-cols-3">
-            {highlights.map((highlight, index) => (
-              <article
-                key={highlight.id}
-                className={`rounded-2xl border border-black bg-white p-7 text-2xl font-bold shadow-[4px_4px_0_#171717] ${
-                  index % 2 === 0 ? "-rotate-1" : "rotate-1"
-                }`}
-              >
-                <span className="mb-5 inline-flex h-10 w-10 items-center justify-center rounded-full border border-black bg-[#a3e635]">
-                  {index + 1}
-                </span>
-                <p>{highlight.label}</p>
-              </article>
-            ))}
-          </div>
-        </div>
-        <svg className="fish-swim absolute bottom-8 left-[4%] w-24" viewBox="0 0 120 60" aria-hidden="true">
-          <path d="M25 30C42 8 76 8 94 30 76 52 42 52 25 30Z" fill="#a3e635" stroke="#000" strokeWidth="2" />
-          <path d="m25 30-18-15v30Z" fill="#a3e635" stroke="#000" strokeWidth="2" />
-          <circle cx="79" cy="25" r="2.5" fill="#000" />
-        </svg>
-        <svg className="fish-swim-slow absolute bottom-12 right-[5%] w-20" viewBox="0 0 120 60" aria-hidden="true">
-          <path d="M25 30C42 8 76 8 94 30 76 52 42 52 25 30Z" fill="#f5d1fe" stroke="#000" strokeWidth="2" />
-          <path d="m25 30-18-15v30Z" fill="#f5d1fe" stroke="#000" strokeWidth="2" />
-          <circle cx="79" cy="25" r="2.5" fill="#000" />
-        </svg>
-      </section>
-
-      <section className="relative overflow-hidden bg-[#f5d1fe] px-6 pb-24 pt-32 text-center text-black">
-        <svg
-          className="absolute left-0 top-0 h-14 w-full"
-          viewBox="0 0 1440 56"
-          preserveAspectRatio="none"
-          aria-hidden="true"
-        >
-          <path d="M0 0h1440v18c-240 42-480-12-720 14S240 56 0 20Z" fill="#3366e0" />
-        </svg>
-        <span className="inline-flex rounded-[100px] border border-black bg-white px-4 py-2 text-base font-bold text-black shadow-[2px_2px_0_#0a0a0d]">
-          MY PROMISE
-        </span>
-        <h2 className="mx-auto mt-6 max-w-3xl text-4xl font-bold leading-tight tracking-[-0.03em] sm:text-6xl">
-          긍정적인 태도로,
-          <br />
-          열심히 참여하겠습니다.
-        </h2>
-        <span className="absolute left-[8%] top-24 -rotate-6 text-5xl text-[#3366e0]">✦</span>
-        <span className="absolute bottom-10 right-[9%] rotate-6 text-4xl text-[#3366e0]">✦</span>
-      </section>
-
-      <footer className="border-t border-black bg-[#f5f5f5] px-6 py-6 text-center text-base font-bold">
-        Industrial Engineering · Data Mining · Marketing Automation
-      </footer>
+          <aside className="choice-panel">
+            <div><p className="eyebrow">CHANGE ITEMS</p><h2 className="text-xl font-black">마음대로 바꿔 입기</h2></div>
+            {[[top, "상의"], [bottom, "하의"]].map(([item, label]) => {
+              const cloth = item as Clothing;
+              return <div className="choice-card" key={label as string}><div className="choice-preview"><Garment item={cloth} /></div><div className="min-w-0"><span>{label as string}</span><b>{cloth.name}</b></div></div>;
+            })}
+            <div className="weather-note"><span>{weather.icon}</span><div><b>오늘의 코디 팁</b><p>햇빛은 따뜻하지만 저녁엔 선선해. 얇은 겉옷을 챙기면 좋아!</p></div></div>
+            <button className="ai-fit-button" onClick={generateAiFit} disabled={isFitting}>
+              {isFitting ? "AI가 옷을 맞추는 중..." : "✨ AI로 몸에 딱 맞게 입히기"}
+            </button>
+            {fitError && <p className="fit-error">{fitError}</p>}
+            <button className="save-button">이 코디로 결정할래 ♡</button>
+          </aside>
+        </section>
+      </div>
+      <input ref={fileRef} type="file" accept="image/*" capture="environment" className="hidden" onChange={upload} />
     </main>
   );
 }

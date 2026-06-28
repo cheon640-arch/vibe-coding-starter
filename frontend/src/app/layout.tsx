@@ -2,15 +2,11 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Vibe Coding Starter",
-  description: "Next.js, Tailwind CSS, SQLite로 만드는 AI 코딩 실습 스타터",
+  title: "옷똑 | 오늘 뭐 입지?",
+  description: "내 옷장과 오늘 날씨로 완성하는 AI 코디 추천",
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{
-  children: React.ReactNode;
-}>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="ko">
       <body>{children}</body>
