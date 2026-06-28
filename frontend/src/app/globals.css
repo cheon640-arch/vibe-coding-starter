@@ -188,13 +188,18 @@ button { cursor: pointer; }
 .wardrobe-drawers span::after { position: absolute; left: 50%; top: 12px; height: 7px; width: 18px; border: 1px solid #a9a096; border-radius: 50%; background: #d2cac0; content: ""; transform: translateX(-50%); }
 
 .avatar-panel {
-  min-height: 720px;
+  min-height: 860px;
   border-left: 7px solid #cdc5ba;
-  padding: 28px;
+  padding: 42px 28px 72px;
   background:
     linear-gradient(#e7ece7d9, #f6f1ead9),
     repeating-linear-gradient(0deg, #87908718 0 1px, transparent 1px 26px),
     repeating-linear-gradient(90deg, #87908718 0 1px, transparent 1px 26px);
+}
+.avatar-panel > .text-center,
+.avatar-panel > .text-center + div {
+  position: relative;
+  z-index: 12;
 }
 .avatar-panel::after {
   position: absolute;
@@ -602,4 +607,5 @@ header.sticky button:first-child { color: #ff3993; text-shadow: 2px 2px 0 #fff, 
   .landing::before { inset: 14px; }
   .styling-grid { padding: 6px; }
   .closet-panel { margin-top: 30px; }
+  .avatar-panel { min-height: 860px; padding-bottom: 72px; }
 }
